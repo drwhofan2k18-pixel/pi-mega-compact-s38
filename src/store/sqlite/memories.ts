@@ -115,7 +115,7 @@ export function addMemory(
     );
   try {
     evictMemoryLru(repo, stateDir);
-  } catch {
+  } catch { console.warn("[mega-compact] memory operation failed"); }
     /* non-fatal: eviction must never fail an add */
   }
   return Number(res.lastInsertRowid);

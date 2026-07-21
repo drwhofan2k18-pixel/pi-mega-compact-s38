@@ -56,7 +56,7 @@ export function openStore(stateDir: string = getStateDir()): DatabaseSync {
     try {
       existing.prepare("SELECT 1");
       return existing;
-    } catch {
+    } catch { console.warn("[mega-compact] sqlite util failed"); }
       cache.delete(stateDir);
     }
   }

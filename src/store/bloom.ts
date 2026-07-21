@@ -81,7 +81,7 @@ export class BloomFilter {
     try {
       const raw = decompressSmart(buf);
       return new BloomFilter(Uint8Array.from(raw));
-    } catch {
+    } catch { console.warn("[mega-compact] bloom filter operation failed"); }
       return new BloomFilter();
     }
   }
@@ -98,7 +98,7 @@ export function openBloom(stateDir: string = getStateDir()): BloomFilter {
   if (existsSync(path)) {
     try {
       filter = BloomFilter.fromBuffer(readFileSync(path));
-    } catch {
+    } catch { console.warn("[mega-compact] bloom filter operation failed"); }
       filter = new BloomFilter();
     }
   }

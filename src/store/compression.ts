@@ -196,7 +196,7 @@ async function compressZstdWithLevel(data: Buffer, level: number): Promise<Buffe
   let zstd: typeof import("@mongodb-js/zstd");
   try {
     zstd = await import("@mongodb-js/zstd");
-  } catch {
+  } catch { console.warn("[mega-compact] compression failed, using raw"); }
     throw new Error(
       "zstd is not available — the @mongodb-js/zstd native addon (zstd.node) " +
         "was not built. Run the extension's native install step (or allow npm " +

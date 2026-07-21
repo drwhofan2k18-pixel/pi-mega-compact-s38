@@ -136,7 +136,7 @@ export function evaluateAndUnlockAchievements(stateDir: string = getStateDir()):
 			}
 		}
 		return titles;
-	} catch {
+	} catch { console.warn("[mega-compact] game achievement failed"); }
 		return [];
 	}
 }

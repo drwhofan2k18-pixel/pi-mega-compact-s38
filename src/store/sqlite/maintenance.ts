@@ -44,7 +44,7 @@ function fileSizeIfExists(path: string): number {
   try {
     const st = statSync(path);
     return st.size;
-  } catch {
+  } catch { console.warn("[mega-compact] maintenance task failed"); }
     return 0;
   }
 }
@@ -62,7 +62,7 @@ export function getDbStats(stateDir: string = getStateDir()): DbStats {
     try {
       const row = db.prepare(`SELECT COUNT(*) AS c FROM ${t}`).get() as { c: number } | undefined;
       if (row) tableCounts[t] = row.c;
-    } catch {
+    } catch { console.warn("[mega-compact] maintenance task failed"); }
       // Table doesn't exist on this DB (e.g. raw_transcript on a pre-S27 store).
       // Skip silently — /mega-db-stats lists only tables that exist.
     }
@@ -74,7 +74,7 @@ export function getDbStats(stateDir: string = getStateDir()): DbStats {
   try {
     const walInfo = db.prepare("PRAGMA wal_info").get() as { frames?: number } | undefined;
     walFrames = walInfo?.frames ?? 0;
-  } catch {
+  } catch { console.warn("[mega-compact] maintenance task failed"); }
     // node:sqlite may not expose wal_info on all versions; not fatal.
   }
   const dbPath = join(stateDir, "sqlite.db");

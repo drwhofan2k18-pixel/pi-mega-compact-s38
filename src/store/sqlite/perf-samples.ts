@@ -115,7 +115,7 @@ export function readPerfSamples(
 		if (r.meta != null) {
 			try {
 				meta = JSON.parse(r.meta);
-			} catch {
+			} catch { console.warn("[mega-compact] perf sample failed"); }
 				meta = null;
 			}
 		}

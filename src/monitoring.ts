@@ -55,7 +55,7 @@ export function logDecision(path: string, ev: DedupDecisionEvent): void {
   try {
     mkdirSync(dirname(path), { recursive: true });
     appendFileSync(path, `${JSON.stringify(ev)}\n`);
-  } catch {
+  } catch { console.error("[mega-compact] monitor failed"); }
     /* never break the extension on a log failure */
   }
 }
@@ -78,7 +78,7 @@ export function loadMetrics(path: string): DedupMetrics {
         storageBytes: parsed.storageBytes ?? 0,
       };
     }
-  } catch {
+  } catch { console.error("[mega-compact] monitor failed"); }
     /* corrupt metrics → fresh */
   }
   return emptyMetrics();
@@ -89,7 +89,7 @@ export function saveMetrics(path: string, m: DedupMetrics): void {
   try {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(m));
-  } catch {
+  } catch { console.error("[mega-compact] monitor failed"); }
     /* never break the extension */
   }
 }
