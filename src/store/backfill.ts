@@ -191,8 +191,9 @@ export function backfillPhase(
   const all = listCheckpoints(sessionId, stateDir).sort((a, b) =>
     a.checkpointId.localeCompare(b.checkpointId),
   );
-  const { lastId } = phaseCursor(db, phase);
-  let { processed } = phaseCursor(db, phase);
+  const cursor = phaseCursor(db, phase);
+  const { lastId } = cursor;
+  let { processed } = cursor;
   const startIndex = lastId ? all.findIndex((c) => c.checkpointId === lastId) + 1 : 0;
 
   let batches = 0;

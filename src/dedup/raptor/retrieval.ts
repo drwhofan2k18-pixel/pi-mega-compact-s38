@@ -36,8 +36,9 @@ function isLeafId(id: string, tree: RaptorTree): boolean {
 function leafDescendants(node: RaptorNode, tree: RaptorTree): string[] {
   const out: string[] = [];
   const queue = [node];
-  while (queue.length) {
-    const cur = queue.shift()!;
+  let i = 0;
+  while (i < queue.length) {
+    const cur = queue[i++];
     for (const childId of cur.children) {
       if (isLeafId(childId, tree)) out.push(childId);
       else {

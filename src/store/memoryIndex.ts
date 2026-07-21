@@ -47,8 +47,8 @@ export interface MemoryIndexHit {
 
 let db: PGliteInstance | undefined;
 let initPromise: Promise<PGliteInstance | undefined> | undefined;
-let disabled = false;
-let warned = false;
+import { pgliteState } from "./pglite-state";
+const idx = pgliteState.memoryIndex;
 /** Lazily-loaded PGlite module + pgvector extension (see loadPgLite). */
 let pgliteMod: {
   PGlite: typeof import("@electric-sql/pglite")["PGlite"];
@@ -68,8 +68,8 @@ function indexDir(): string {
 
 function logWarn(msg: string): void {
   // Never throw — degradation is the whole point. One warning per process.
-  if (warned) return;
-  warned = true;
+  if (idx.warned) return;
+  idx.warned = true;
   try {
     console.warn(`[mega-compact:memoryIndex] ${msg} (falling back to same-repo scan)`);
   } catch {
@@ -80,7 +80,7 @@ function logWarn(msg: string): void {
 /** Honor the emergency kill-switch (shared with the checkpoint index). */
 export function isMemoryIndexDisabled(): boolean {
   return (
-    disabled ||
+    idx.disabled ||
     process.env.MEGACOMPACT_PGLITE_DISABLED === "true" ||
     process.env.MEGACOMPACT_PGLITE_DISABLED === "1"
   );
@@ -166,7 +166,7 @@ async function openPgLite(
         /* self-heal failed — fall through to disable */
       }
     }
-    disabled = true;
+    idx.disabled = true;
     logWarn(`init failed: ${msg}`);
     return undefined;
   }
@@ -203,7 +203,7 @@ export async function upsertMemoryEmbedding(
       [repoId, memoryId, content, lit],
     );
   } catch (err) {
-    disabled = true;
+    idx.disabled = true;
     logWarn(`upsert failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
@@ -247,7 +247,7 @@ export async function searchMemoriesAsync(
       score: r.score as number,
     }));
   } catch (err) {
-    disabled = true;
+    idx.disabled = true;
     logWarn(`search failed: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
@@ -264,6 +264,6 @@ export async function closeMemoryIndex(): Promise<void> {
   }
   db = undefined;
   initPromise = undefined;
-  disabled = false;
-  warned = false;
+  idx.disabled = false;
+  idx.warned = false;
 }

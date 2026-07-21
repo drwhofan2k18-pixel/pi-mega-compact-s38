@@ -23,6 +23,8 @@ import { mkdirSync, rmSync, existsSync } from "node:fs";
 // PGlite + pgvector are script-free WASM (no native build) → survive pi's
 // install-script block. The VALUE import is LAZY (dynamic import inside
 // openPgLite) so a missing/broken package degrades to the sync scan instead of
+import { pgliteState } from "./pglite-state";
+const idx = pgliteState.vectorIndex;
 // crashing module load. A static top-level `import { PGlite }` would throw
 // "Cannot find module" at pi startup and take down the whole extension. The
 // `import type` below is erased at compile time and emits NO runtime load.
@@ -42,8 +44,6 @@ export interface VectorIndexHit {
 
 let db: PGliteInstance | undefined;
 let initPromise: Promise<PGliteInstance | undefined> | undefined;
-let disabled = false;
-let warned = false;
 /** Lazily-loaded PGlite module + pgvector extension (see loadPgLite). */
 let pgliteMod: {
   PGlite: typeof import("@electric-sql/pglite")["PGlite"];
@@ -63,8 +63,8 @@ function indexDir(): string {
 
 function logWarn(msg: string): void {
   // Never throw — degradation is the whole point. One warning per process.
-  if (warned) return;
-  warned = true;
+  if (idx.warned) return;
+  idx.warned = true;
   try {
     console.warn(`[mega-compact:vectorIndex] ${msg} (falling back to sync scan)`);
   } catch {
@@ -75,7 +75,7 @@ function logWarn(msg: string): void {
 /** Honor the emergency kill-switch. When set, the index is fully disabled. */
 export function isVectorIndexDisabled(): boolean {
   return (
-    disabled ||
+    idx.disabled ||
     process.env.MEGACOMPACT_PGLITE_DISABLED === "true" ||
     process.env.MEGACOMPACT_PGLITE_DISABLED === "1"
   );
@@ -171,7 +171,7 @@ async function openPgLite(
         // Self-heal failed — fall through to disable.
       }
     }
-    disabled = true;
+    idx.disabled = true;
     logWarn(`init failed: ${msg}`);
     return undefined;
   }
@@ -212,7 +212,7 @@ export async function upsertEmbedding(
       [repoId, sessionId, checkpointId, lit],
     );
   } catch (err) {
-    disabled = true;
+    idx.disabled = true;
     logWarn(`upsert failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
@@ -256,7 +256,7 @@ export async function searchAsync(
       score: r.score as number,
     }));
   } catch (err) {
-    disabled = true;
+    idx.disabled = true;
     logWarn(`search failed: ${err instanceof Error ? err.message : String(err)}`);
     return [];
   }
@@ -273,8 +273,8 @@ export async function closeVectorIndex(): Promise<void> {
   }
   db = undefined;
   initPromise = undefined;
-  disabled = false;
-  warned = false;
+  idx.disabled = false;
+  idx.warned = false;
 }
 
 /**
